@@ -9,6 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+#My notes of learning
 notes.md
 
+# Datasets
 datasets/gsm8k_processed/
+datasets/gsm8k_tokenized/
