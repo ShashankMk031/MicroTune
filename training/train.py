@@ -1,38 +1,69 @@
-from datasets import load_dataset, load_from_disk
-from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments
-
-tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.3")
-
-# Setting the pad token to be the same as the eos token
-tokenizer.pad_token = tokenizer.eos_token 
-
-print(tokenizer.pad_token)
-print(tokenizer.eos_token)
+from datasets import load_from_disk
+from transformers import AutoTokenizer
 
 dataset = load_from_disk("datasets/gsm8k_processed")
 
-# Tokenizing the dataset
+print("Dataset loaded:")
+print(dataset)
+
+# Initialize tokenizer
+model_name = "mistralai/Mistral-7B-v0.1"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# Set pad token to eos , since Mistral doesn't have a dedicated pad token give None to avoid errors during tokenization. This is common for causal language models where the EOS token is used for padding.
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
+
+print("Pad token:", tokenizer.pad_token)
+print("EOS token:", tokenizer.eos_token)
+
+# Define tokenization function
 def tokenize_function(examples):
-    return tokenizer(examples["text"], truncation = True, padding = "max_length", max_length = 512)
+    tokenized = tokenizer(
+        examples["text"],
+        truncation=True,
+        padding="max_length",
+        max_length=512
+    )
+    
+    tokenized["labels"] = tokenized["input_ids"].copy()
+    
+    return tokenized
 
-# Applying the tokenization function to the dataset
-tokenized_datasets = dataset.map(tokenize_function, batched = True, remove_columns=["text"])
+# apply tokenization to the entire dataset
+tokenized_datasets = dataset.map(
+    tokenize_function,
+    batched=True,
+    remove_columns=["text"]
+)
 
-# Decoding the first tokenized example to verify the tokenization
-decoded = tokenizer.decode(tokenized_datasets["train"][0]["input_ids"], skip_special_tokens = True)
+# Display tokenized dataset info and verify correctness
+print("\nTokenized columns:")
+print(tokenized_datasets["train"].column_names)
+
+print("\nDataset sizes:")
+print("Train:", len(tokenized_datasets["train"]))
+print("Test:", len(tokenized_datasets["test"]))
+
+# Decode a sample to verify correctness
+decoded = tokenizer.decode(
+    tokenized_datasets["train"][0]["input_ids"],
+    skip_special_tokens=True
+)
+
+print("\nDecoded sample (first 500 chars):\n")
 print(decoded[:500])
 
-# Checking the column names and lengths of the tokenized datasets
-print(tokenized_datasets["train"].column_names)
-print(tokenized_datasets["test"].column_names)
+# Save the tokenized dataset to disk
+save_path = "datasets/gsm8k_tokenized"
+tokenized_datasets.save_to_disk(save_path)
 
-print(len(tokenized_datasets["train"]))
-print(len(tokenized_datasets["test"]))
+print(f"\nTokenized dataset saved to: {save_path}")
 
-# Saving the tokenized dataset to disk
-tokenized_datasets.save_to_disk("datasets/gsm8k_tokenized")
+# Last verification step: Load the saved dataset and check its contents
+loaded = load_from_disk(save_path)
 
-# Loading the tokenized dataset to verify
-loaded = load_from_disk("datasets/gsm8k_tokenized")
-loaded["train"][0]
-loaded["test"][0]
+print("\nReload check:")
+print("Train example keys:", loaded["train"][0].keys())
+print("Test example keys:", loaded["test"][0].keys())
