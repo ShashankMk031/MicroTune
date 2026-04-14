@@ -58,7 +58,7 @@ def main(resume: bool) : # Type Annotation : eg: resume:bol | It is a way to spe
     # Lora config 
     lora_config = LoraConfig(
         r = 16, 
-        lora_aplha = 32, 
+        lora_alpha = 32, 
         target_modules=['q_proj', 'v_proj'], 
         lora_dropout=0.05,
         bias = "none",
@@ -88,7 +88,7 @@ def main(resume: bool) : # Type Annotation : eg: resume:bol | It is a way to spe
         num_train_epochs = 3,
 
         warmup_steps=50, 
-        
+
         logging_steps = 50, 
 
         save_strategy = "steps", 
