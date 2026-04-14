@@ -101,7 +101,7 @@ def main(resume: bool) : # Type Annotation : eg: resume:bol | It is a way to spe
         fp16 = True, 
         bf16=False, 
 
-        report_to = None,
+        #report_to = None,
     )
     
     # Trainer 
