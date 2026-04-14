@@ -95,7 +95,7 @@ def main(resume: bool) : # Type Annotation : eg: resume:bol | It is a way to spe
         save_steps = 150, 
         save_total_limit=2, 
 
-        evaluation_strategy = "steps",
+        #evaluation_strategy = "steps",
         eval_steps = 200, 
 
         fp16 = True, 
