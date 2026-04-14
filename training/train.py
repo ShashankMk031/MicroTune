@@ -117,7 +117,7 @@ def main(resume: bool):
         save_steps=150,
         save_total_limit=2,
 
-        evaluation_strategy="no",   # no eval for speed
+        #evaluation_strategy="no",   # no eval for speed
 
         fp16=True,
         bf16=False,
