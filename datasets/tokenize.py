@@ -16,7 +16,7 @@ def tokenize_function(examples):
         examples['text'],
         truncation = True,
         padding = False, # dynamic padding later 
-        max_length = 512
+        max_length = 384
     )
 
     # Labels for causal LM 
