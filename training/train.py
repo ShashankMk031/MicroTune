@@ -28,7 +28,7 @@ def main(resume: bool):
     # Paths
     # -------------------------
     data_path = "datasets/gsm8k_tokenized"
-    output_dir = "/content/drive/MyDrive/microtune_runs"
+    output_dir = "/content/microtune_runs"
     final_dir = "/content/drive/MyDrive/microtune_final"
 
     # -------------------------
