@@ -22,8 +22,9 @@ RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
 MAX_LENGTH = 256
-PER_DEVICE_TRAIN_BATCH_SIZE = 1
-GRADIENT_ACCUMULATION_STEPS = 8
+PER_DEVICE_TRAIN_BATCH_SIZE = 4
+GRADIENT_ACCUMULATION_STEPS = 4
+dataloader_pin_memory = True
 
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -195,6 +196,7 @@ def main(resume: bool):
         "seed": 42,
         "remove_unused_columns": False,
         "group_by_length": True,
+        "dataloader_num_workers": 2,
         "save_safetensors": True,
     }
 
