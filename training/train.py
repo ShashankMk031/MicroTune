@@ -198,7 +198,19 @@ def main(resume: bool):
     elif "eval_strategy" in training_arg_params:
         training_kwargs["eval_strategy"] = "no"
 
-    training_args = TrainingArguments(**training_kwargs)
+    supported_training_kwargs = {
+        key: value
+        for key, value in training_kwargs.items()
+        if key in training_arg_params
+    }
+    skipped_training_kwargs = sorted(set(training_kwargs) - set(supported_training_kwargs))
+    if skipped_training_kwargs:
+        print(
+            "Skipping unsupported TrainingArguments keys: "
+            + ", ".join(skipped_training_kwargs)
+        )
+
+    training_args = TrainingArguments(**supported_training_kwargs)
 
     trainer = Trainer(
         model=model,
