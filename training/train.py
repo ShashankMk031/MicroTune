@@ -87,7 +87,7 @@ def main(resume: bool):
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         quantization_config=bnb_config,
-        torch_dtype=dtype,
+        dtype=dtype,
         device_map="auto",
     )
     model.gradient_checkpointing_enable()
