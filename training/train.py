@@ -1,3 +1,4 @@
+import os
 import argparse
 from pathlib import Path
 
@@ -18,10 +19,15 @@ MODEL_ID = "google/gemma-4-E4B-it"
 RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
-MAX_LENGTH = 384
+MAX_LENGTH = 256
+PER_DEVICE_TRAIN_BATCH_SIZE = 1
+GRADIENT_ACCUMULATION_STEPS = 8
 
+
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 # Faster GPU math on supported NVIDIA hardware.
+torch.set_float32_matmul_precision("high")
 torch.backends.cuda.matmul.allow_tf32 = True
 
 
@@ -58,6 +64,56 @@ def load_and_tokenize_dataset(tokenizer: AutoTokenizer, data_path: str, max_leng
     )
 
 
+def find_lora_target_modules(model) -> list[str]:
+    target_suffixes = {
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj",
+    }
+    linear_class_names = {"Linear", "Linear4bit", "Linear8bitLt"}
+    target_modules = set()
+
+    for name, module in model.named_modules():
+        leaf_name = name.rsplit(".", 1)[-1]
+
+        # Gemma 4 E4B multimodal checkpoints contain vision/audio towers whose
+        # projection names overlap with the language model. Restrict LoRA to the
+        # text backbone only so PEFT does not try to wrap Gemma4ClippableLinear.
+        if ".vision_tower." in name or ".audio_tower." in name:
+            continue
+
+        if ".language_model.layers." not in name and ".model.layers." not in name:
+            continue
+
+        is_supported_linear = (
+            isinstance(module, torch.nn.Linear)
+            or module.__class__.__name__ in linear_class_names
+        )
+        if not is_supported_linear:
+            continue
+
+        if leaf_name in target_suffixes:
+            target_modules.add(name)
+            continue
+
+        if leaf_name == "linear":
+            parent_name = name.rsplit(".", 1)[0]
+            parent_leaf = parent_name.rsplit(".", 1)[-1]
+            if parent_leaf in target_suffixes:
+                target_modules.add(name)
+
+    if not target_modules:
+        raise RuntimeError(
+            "Could not find supported text-only LoRA target modules in the loaded model."
+        )
+
+    return sorted(target_modules)
+
+
 def main(resume: bool):
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA GPU is required to fine-tune Gemma 4 E4B.")
@@ -89,15 +145,19 @@ def main(resume: bool):
         quantization_config=bnb_config,
         dtype=dtype,
         device_map="auto",
+        attn_implementation="sdpa",
     )
-    model.gradient_checkpointing_enable()
-    model.config.use_cache = False
     model = prepare_model_for_kbit_training(model)
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    model.config.use_cache = False
+
+    target_modules = find_lora_target_modules(model)
+    print(f"Found {len(target_modules)} LoRA target modules in the text backbone.")
 
     lora_config = LoraConfig(
         r=8,
         lora_alpha=16,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+        target_modules=target_modules,
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
@@ -112,21 +172,24 @@ def main(resume: bool):
 
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
-        per_device_train_batch_size=2,
-        gradient_accumulation_steps=4,
+        per_device_train_batch_size=PER_DEVICE_TRAIN_BATCH_SIZE,
+        gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
         learning_rate=2e-4,
         num_train_epochs=3,
         warmup_steps=50,
-        logging_steps=50,
+        logging_steps=10,
         save_strategy="steps",
-        save_steps=100,
+        save_steps=200,
         save_total_limit=2,
         evaluation_strategy="no",
         fp16=use_fp16,
         bf16=use_bf16,
+        optim="paged_adamw_8bit",
         report_to="none",
         seed=42,
         remove_unused_columns=False,
+        group_by_length=True,
+        save_safetensors=True,
     )
 
     trainer = Trainer(
