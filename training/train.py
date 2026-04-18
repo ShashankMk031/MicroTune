@@ -1,5 +1,6 @@
 import os
 import argparse
+import inspect
 from pathlib import Path
 
 import torch
@@ -170,27 +171,34 @@ def main(resume: bool):
         mlm=False,
     )
 
-    training_args = TrainingArguments(
-        output_dir=OUTPUT_DIR,
-        per_device_train_batch_size=PER_DEVICE_TRAIN_BATCH_SIZE,
-        gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
-        learning_rate=2e-4,
-        num_train_epochs=3,
-        warmup_steps=50,
-        logging_steps=10,
-        save_strategy="steps",
-        save_steps=200,
-        save_total_limit=2,
-        evaluation_strategy="no",
-        fp16=use_fp16,
-        bf16=use_bf16,
-        optim="paged_adamw_8bit",
-        report_to="none",
-        seed=42,
-        remove_unused_columns=False,
-        group_by_length=True,
-        save_safetensors=True,
-    )
+    training_kwargs = {
+        "output_dir": OUTPUT_DIR,
+        "per_device_train_batch_size": PER_DEVICE_TRAIN_BATCH_SIZE,
+        "gradient_accumulation_steps": GRADIENT_ACCUMULATION_STEPS,
+        "learning_rate": 2e-4,
+        "num_train_epochs": 3,
+        "warmup_steps": 50,
+        "logging_steps": 10,
+        "save_strategy": "steps",
+        "save_steps": 200,
+        "save_total_limit": 2,
+        "fp16": use_fp16,
+        "bf16": use_bf16,
+        "optim": "paged_adamw_8bit",
+        "report_to": "none",
+        "seed": 42,
+        "remove_unused_columns": False,
+        "group_by_length": True,
+        "save_safetensors": True,
+    }
+
+    training_arg_params = inspect.signature(TrainingArguments.__init__).parameters
+    if "evaluation_strategy" in training_arg_params:
+        training_kwargs["evaluation_strategy"] = "no"
+    elif "eval_strategy" in training_arg_params:
+        training_kwargs["eval_strategy"] = "no"
+
+    training_args = TrainingArguments(**training_kwargs)
 
     trainer = Trainer(
         model=model,
