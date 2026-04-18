@@ -11,7 +11,7 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    DataCollatorForLanguageModeling,
+    DataCollatorForSeq2Seq,
     Trainer,
     TrainingArguments,
 )
@@ -22,9 +22,9 @@ RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
 MAX_LENGTH = 256
-PER_DEVICE_TRAIN_BATCH_SIZE = 4
-GRADIENT_ACCUMULATION_STEPS = 4
-DATALOADER_PIN_MEMORY = True
+PER_DEVICE_TRAIN_BATCH_SIZE = 1
+GRADIENT_ACCUMULATION_STEPS = 8
+DATALOADER_PIN_MEMORY = False
 
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -173,9 +173,12 @@ def main(resume: bool):
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
-    data_collator = DataCollatorForLanguageModeling(
+    data_collator = DataCollatorForSeq2Seq(
         tokenizer=tokenizer,
-        mlm=False,
+        model=model,
+        padding=True,
+        label_pad_token_id=-100,
+        pad_to_multiple_of=8,
     )
 
     training_kwargs = {
@@ -196,7 +199,7 @@ def main(resume: bool):
         "seed": 42,
         "remove_unused_columns": False,
         "group_by_length": True,
-        "dataloader_num_workers": 2,
+        "dataloader_num_workers": 0,
         "dataloader_pin_memory": DATALOADER_PIN_MEMORY,
         "save_safetensors": True,
     }
