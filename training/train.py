@@ -24,7 +24,7 @@ FINAL_DIR = "microtune_final"
 MAX_LENGTH = 256
 PER_DEVICE_TRAIN_BATCH_SIZE = 4
 GRADIENT_ACCUMULATION_STEPS = 4
-dataloader_pin_memory = True
+DATALOADER_PIN_MEMORY = True
 
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -197,6 +197,7 @@ def main(resume: bool):
         "remove_unused_columns": False,
         "group_by_length": True,
         "dataloader_num_workers": 2,
+        "dataloader_pin_memory": DATALOADER_PIN_MEMORY,
         "save_safetensors": True,
     }
 
