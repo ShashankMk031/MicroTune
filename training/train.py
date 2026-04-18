@@ -6,6 +6,7 @@ from pathlib import Path
 import torch
 from datasets import load_from_disk
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from transformers import modeling_utils
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -30,6 +31,12 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 # Faster GPU math on supported NVIDIA hardware.
 torch.set_float32_matmul_precision("high")
 torch.backends.cuda.matmul.allow_tf32 = True
+
+# Newer Transformers versions may try a large VRAM pre-allocation during
+# `from_pretrained`, which is only a loading-speed optimization and can OOM on
+# smaller GPUs. Disable it for this training script.
+if hasattr(modeling_utils, "caching_allocator_warmup"):
+    modeling_utils.caching_allocator_warmup = lambda *args, **kwargs: None
 
 
 def get_training_dtype() -> torch.dtype:
