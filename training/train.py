@@ -145,7 +145,6 @@ def main(resume: bool):
         MODEL_ID,
         quantization_config=bnb_config,
         dtype=dtype,
-        device_map="auto",
         attn_implementation="sdpa",
     )
     model = prepare_model_for_kbit_training(model)
