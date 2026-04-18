@@ -1,4 +1,28 @@
-from datasets import load_from_disk
+import sys
+from pathlib import Path
+
+
+def import_hf_datasets():
+    # This repo has a local "datasets/" directory, which can shadow the
+    # Hugging Face "datasets" package when this script is run directly.
+    script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent.resolve()
+
+    original_sys_path = list(sys.path)
+    sys.path = [
+        path
+        for path in sys.path
+        if Path(path or ".").resolve() not in {script_dir, repo_root}
+    ]
+    try:
+        from datasets import load_from_disk
+    finally:
+        sys.path = original_sys_path
+
+    return load_from_disk
+
+
+load_from_disk = import_hf_datasets()
 from transformers import AutoTokenizer
 
 MODEL_ID = "google/gemma-4-E4B-it"

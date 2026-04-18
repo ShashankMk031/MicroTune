@@ -142,7 +142,13 @@ Paste the same Python code into a notebook cell in the Studio and run it there.
 
 This repo also has [training/train.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/training/train.py:1). That is for fine-tuning, not for the simple Hugging Face inference example above.
 
-If you want to try training in Lightning Studio after dependency install:
+For training, run preprocessing first:
+
+```bash
+python datasets/preprocess.py
+```
+
+Then start training:
 
 ```bash
 python training/train.py
@@ -153,6 +159,8 @@ Resume from checkpoint with:
 ```bash
 python training/train.py --resume
 ```
+
+You do not need to run `datasets/tokenize.py` for the current training pipeline. [training/train.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/training/train.py:34) loads `datasets/gsm8k_processed` and tokenizes it internally with the Gemma tokenizer.
 
 Be aware that fine-tuning Gemma 4 E4B can still exceed the memory available on smaller free GPUs even with 4-bit QLoRA.
 
