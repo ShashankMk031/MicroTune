@@ -21,12 +21,13 @@ MODEL_ID = "google/gemma-4-E2B-it"
 RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
-MAX_LENGTH = 128
+MAX_LENGTH = 64
 PER_DEVICE_TRAIN_BATCH_SIZE = 1
 GRADIENT_ACCUMULATION_STEPS = 8
 DATALOADER_PIN_MEMORY = False
 NUM_TRAIN_EPOCHS = 1
-WARMUP_STEPS = 20
+MAX_STEPS = 200
+WARMUP_STEPS = 10
 LEARNING_RATE = 2e-4
 
 
@@ -79,7 +80,6 @@ def load_and_tokenize_dataset(tokenizer: AutoTokenizer, data_path: str, max_leng
 def find_lora_target_modules(model) -> list[str]:
     target_suffixes = {
         "q_proj",
-        "v_proj",
     }
     linear_class_names = {"Linear", "Linear4bit", "Linear8bitLt"}
     target_modules = set()
@@ -161,8 +161,8 @@ def main(resume: bool):
     print(f"Found {len(target_modules)} LoRA target modules in the text backbone.")
 
     lora_config = LoraConfig(
-        r=4,
-        lora_alpha=8,
+        r=2,
+        lora_alpha=4,
         target_modules=target_modules,
         lora_dropout=0.05,
         bias="none",
@@ -185,10 +185,11 @@ def main(resume: bool):
         "gradient_accumulation_steps": GRADIENT_ACCUMULATION_STEPS,
         "learning_rate": LEARNING_RATE,
         "num_train_epochs": NUM_TRAIN_EPOCHS,
+        "max_steps": MAX_STEPS,
         "warmup_steps": WARMUP_STEPS,
         "logging_steps": 10,
         "save_strategy": "steps",
-        "save_steps": 500,
+        "save_steps": 100,
         "save_total_limit": 2,
         "fp16": use_fp16,
         "bf16": use_bf16,
