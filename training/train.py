@@ -17,7 +17,7 @@ from transformers import (
 )
 
 
-MODEL_ID = "google/gemma-4-E2B-it"
+MODEL_ID = "google/gemma-2-2b-it"
 RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
@@ -87,9 +87,8 @@ def find_lora_target_modules(model) -> list[str]:
     for name, module in model.named_modules():
         leaf_name = name.rsplit(".", 1)[-1]
 
-        # Gemma 4 E4B multimodal checkpoints contain vision/audio towers whose
-        # projection names overlap with the language model. Restrict LoRA to the
-        # text backbone only so PEFT does not try to wrap Gemma4ClippableLinear.
+        # Keep LoRA on the decoder text backbone and avoid any non-language
+        # components if the loaded checkpoint contains them.
         if ".vision_tower." in name or ".audio_tower." in name:
             continue
 
@@ -123,7 +122,7 @@ def find_lora_target_modules(model) -> list[str]:
 
 def main(resume: bool):
     if not torch.cuda.is_available():
-        raise RuntimeError("CUDA GPU is required to fine-tune Gemma 4 E2B.")
+        raise RuntimeError("CUDA GPU is required to fine-tune Gemma 2 2B IT.")
 
     dtype = get_training_dtype()
     use_bf16 = dtype == torch.bfloat16
