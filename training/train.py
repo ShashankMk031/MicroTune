@@ -17,14 +17,17 @@ from transformers import (
 )
 
 
-MODEL_ID = "google/gemma-4-E4B-it"
+MODEL_ID = "google/gemma-4-E2B-it"
 RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
-MAX_LENGTH = 256
+MAX_LENGTH = 128
 PER_DEVICE_TRAIN_BATCH_SIZE = 1
 GRADIENT_ACCUMULATION_STEPS = 8
 DATALOADER_PIN_MEMORY = False
+NUM_TRAIN_EPOCHS = 1
+WARMUP_STEPS = 20
+LEARNING_RATE = 2e-4
 
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -76,12 +79,7 @@ def load_and_tokenize_dataset(tokenizer: AutoTokenizer, data_path: str, max_leng
 def find_lora_target_modules(model) -> list[str]:
     target_suffixes = {
         "q_proj",
-        "k_proj",
         "v_proj",
-        "o_proj",
-        "gate_proj",
-        "up_proj",
-        "down_proj",
     }
     linear_class_names = {"Linear", "Linear4bit", "Linear8bitLt"}
     target_modules = set()
@@ -125,7 +123,7 @@ def find_lora_target_modules(model) -> list[str]:
 
 def main(resume: bool):
     if not torch.cuda.is_available():
-        raise RuntimeError("CUDA GPU is required to fine-tune Gemma 4 E4B.")
+        raise RuntimeError("CUDA GPU is required to fine-tune Gemma 4 E2B.")
 
     dtype = get_training_dtype()
     use_bf16 = dtype == torch.bfloat16
@@ -163,8 +161,8 @@ def main(resume: bool):
     print(f"Found {len(target_modules)} LoRA target modules in the text backbone.")
 
     lora_config = LoraConfig(
-        r=8,
-        lora_alpha=16,
+        r=4,
+        lora_alpha=8,
         target_modules=target_modules,
         lora_dropout=0.05,
         bias="none",
@@ -185,12 +183,12 @@ def main(resume: bool):
         "output_dir": OUTPUT_DIR,
         "per_device_train_batch_size": PER_DEVICE_TRAIN_BATCH_SIZE,
         "gradient_accumulation_steps": GRADIENT_ACCUMULATION_STEPS,
-        "learning_rate": 2e-4,
-        "num_train_epochs": 3,
-        "warmup_steps": 50,
+        "learning_rate": LEARNING_RATE,
+        "num_train_epochs": NUM_TRAIN_EPOCHS,
+        "warmup_steps": WARMUP_STEPS,
         "logging_steps": 10,
         "save_strategy": "steps",
-        "save_steps": 200,
+        "save_steps": 500,
         "save_total_limit": 2,
         "fp16": use_fp16,
         "bf16": use_bf16,
