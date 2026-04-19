@@ -3,6 +3,9 @@ import argparse
 import inspect
 from pathlib import Path
 
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import torch
 from datasets import load_from_disk
 from peft import LoraConfig, get_peft_model
@@ -20,18 +23,15 @@ MODEL_ID = "google/gemma-2-2b-it"
 RAW_DATA_PATH = "datasets/gsm8k_processed"
 OUTPUT_DIR = "microtune_runs"
 FINAL_DIR = "microtune_final"
-MAX_LENGTH = 64
+MAX_LENGTH = 32
 PER_DEVICE_TRAIN_BATCH_SIZE = 1
-GRADIENT_ACCUMULATION_STEPS = 8
+GRADIENT_ACCUMULATION_STEPS = 16
 DATALOADER_PIN_MEMORY = False
 NUM_TRAIN_EPOCHS = 1
-MAX_STEPS = 200
+MAX_STEPS = 100
 WARMUP_STEPS = 10
 LEARNING_RATE = 2e-4
 USE_4BIT = os.environ.get("MICROTUNE_USE_4BIT", "0") == "1"
-
-
-os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 # Faster GPU math on supported NVIDIA hardware.
 torch.set_float32_matmul_precision("high")
@@ -180,7 +180,6 @@ def main(resume: bool):
         model=model,
         padding=True,
         label_pad_token_id=-100,
-        pad_to_multiple_of=8,
     )
 
     training_kwargs = {
