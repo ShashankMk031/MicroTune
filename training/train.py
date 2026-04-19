@@ -92,7 +92,7 @@ def find_lora_target_modules(model) -> list[str]:
         if ".vision_tower." in name or ".audio_tower." in name:
             continue
 
-        if ".language_model.layers." not in name and ".model.layers." not in name:
+        if ".layers." not in name:
             continue
 
         is_supported_linear = (
