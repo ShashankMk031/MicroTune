@@ -5,12 +5,11 @@ from pathlib import Path
 
 import torch
 from datasets import load_from_disk
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig, get_peft_model
 from transformers import modeling_utils
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
     DataCollatorForSeq2Seq,
     Trainer,
     TrainingArguments,
@@ -29,6 +28,7 @@ NUM_TRAIN_EPOCHS = 1
 MAX_STEPS = 200
 WARMUP_STEPS = 10
 LEARNING_RATE = 2e-4
+USE_4BIT = os.environ.get("MICROTUNE_USE_4BIT", "0") == "1"
 
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -139,20 +139,25 @@ def main(resume: bool):
         max_length=MAX_LENGTH,
     )
 
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=dtype,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-    )
+    model_load_kwargs = {
+        "dtype": dtype,
+        "attn_implementation": "sdpa",
+    }
+    if USE_4BIT:
+        from transformers import BitsAndBytesConfig
+
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=dtype,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
+        model_load_kwargs["quantization_config"] = bnb_config
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
-        quantization_config=bnb_config,
-        dtype=dtype,
-        attn_implementation="sdpa",
+        **model_load_kwargs,
     )
-    model = prepare_model_for_kbit_training(model)
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     model.config.use_cache = False
 
@@ -192,7 +197,7 @@ def main(resume: bool):
         "save_total_limit": 2,
         "fp16": use_fp16,
         "bf16": use_bf16,
-        "optim": "paged_adamw_8bit",
+        "optim": "paged_adamw_8bit" if USE_4BIT else "adamw_torch",
         "report_to": "none",
         "seed": 42,
         "remove_unused_columns": False,
