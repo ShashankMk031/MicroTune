@@ -9,7 +9,23 @@ wheels/
 # Virtual environments
 .venv
 
-#My notes of learning
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# My notes of learning
 notes.md
 interview.md
 
@@ -17,3 +33,22 @@ interview.md
 datasets/gsm8k_processed/
 datasets/gsm8k_tokenized/microtune_runs/
 microtune_runs/
+
+# Model checkpoints and temporary files
+checkpoint-*/
+*.ckpt
+*.pth
+*.bin
+*.safetensors  # Large model files
+merged_model/  # Exclude entire merged model directory
+!results/       # Keep evaluation results
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+wandb/

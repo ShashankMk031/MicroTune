@@ -1,0 +1,18 @@
+{
+  "runtime_device": "mps",
+  "split": "test",
+  "base_model": "google/gemma-2-2b-it",
+  "adapter_path": "/Users/shashankmk/Documents/Projects-Development/MicroTune/microtune_final",
+  "base_model_metrics": {
+    "correct": 3,
+    "total": 5,
+    "accuracy": 0.6
+  },
+  "fine_tuned_model_metrics": {
+    "correct": 5,
+    "total": 5,
+    "accuracy": 1.0
+  },
+  "improvement_percent": 40.0,
+  "plot_path": "/Users/shashankmk/Documents/Projects-Development/MicroTune/results/accuracy_comparison.png"
+}
