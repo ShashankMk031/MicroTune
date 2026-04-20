@@ -11,11 +11,11 @@ MicroTune is a Gemma-based math reasoning project built around a LoRA adapter fo
 - Dataset: GSM8K-style math reasoning
 - Local evaluation runtime: macOS on `mps` if available, otherwise `cpu`
 - Serving:
-  - FastAPI at [api/app.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/api/app.py)
-  - Gradio UI at [ui/app.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/ui/app.py)
+  - FastAPI at [api/app.py](./api/app.py)
+  - Gradio UI at [ui/app.py](./ui/app.py)
 - Evaluation:
-  - exact-match accuracy at [evaluation/eval.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/evaluation/eval.py)
-  - side-by-side comparison at [evaluation/compare.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/evaluation/compare.py)
+  - exact-match accuracy at [evaluation/eval.py](./evaluation/eval.py)
+  - side-by-side comparison at [evaluation/compare.py](./evaluation/compare.py)
 
 ## Project Layout
 
@@ -147,5 +147,5 @@ Run the local evaluation scripts first, then the generated charts will appear he
 
 ## Documentation
 
-- Full Mac runbook: [run.md](/Users/shashankmk/Documents/Projects-Development/MicroTune/run.md)
-- GGUF export notes: [scripts/export_gguf.md](/Users/shashankmk/Documents/Projects-Development/MicroTune/scripts/export_gguf.md)
+- Full Mac runbook: [run.md](./run.md)
+- GGUF export notes: [scripts/export_gguf.md](./scripts/export_gguf.md)

@@ -2,7 +2,7 @@
   "runtime_device": "mps",
   "split": "test",
   "base_model": "google/gemma-2-2b-it",
-  "adapter_path": "/Users/shashankmk/Documents/Projects-Development/MicroTune/microtune_final",
+  "adapter_path": "./microtune_final",
   "base_model_metrics": {
     "correct": 3,
     "total": 5,

@@ -9,14 +9,14 @@ This guide covers the Mac-only workflow for MicroTune after training has already
   - This repo assumes `microtune_final/` already contains the adapter exported from your Kaggle training run
 - Dataset flow: GSM8K raw -> processed dataset in `datasets/gsm8k_processed`
 - Serving stack:
-  - FastAPI: [api/app.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/api/app.py)
-  - Gradio UI: [ui/app.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/ui/app.py)
+  - FastAPI: [api/app.py](./api/app.py)
+  - Gradio UI: [ui/app.py](./ui/app.py)
 - Evaluation:
-  - Accuracy script: [evaluation/eval.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/evaluation/eval.py)
-  - Side-by-side comparison: [evaluation/compare.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/evaluation/compare.py)
+  - Accuracy script: [evaluation/eval.py](./evaluation/eval.py)
+  - Side-by-side comparison: [evaluation/compare.py](./evaluation/compare.py)
 - Merge/export:
-  - Merge LoRA: [scripts/merge_lora.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/scripts/merge_lora.py)
-  - GGUF export notes: [scripts/export_gguf.md](/Users/shashankmk/Documents/Projects-Development/MicroTune/scripts/export_gguf.md)
+  - Merge LoRA: [scripts/merge_lora.py](./scripts/merge_lora.py)
+  - GGUF export notes: [scripts/export_gguf.md](./scripts/export_gguf.md)
 
 ## 2. macOS Prerequisites
 
@@ -140,7 +140,7 @@ These local scripts assume the fine-tuned LoRA adapter already exists here:
 microtune_final/
 ```
 
-You do not need to run [training/train.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/training/train.py) on your Mac for the remaining steps in this guide.
+You do not need to run [training/train.py](./training/train.py) on your Mac for the remaining steps in this guide.
 
 ## 9. Evaluate Base vs Fine-Tuned Model
 
@@ -305,7 +305,7 @@ python scripts/merge_lora.py \
 
 ## 14. Export To GGUF
 
-See the full notes in [scripts/export_gguf.md](/Users/shashankmk/Documents/Projects-Development/MicroTune/scripts/export_gguf.md).
+See the full notes in [scripts/export_gguf.md](./scripts/export_gguf.md).
 
 High-level flow:
 
@@ -434,7 +434,7 @@ Cause:
 
 Fix:
 
-- regenerate the dataset with [datasets/preprocess.py](/Users/shashankmk/Documents/Projects-Development/MicroTune/datasets/preprocess.py)
+- regenerate the dataset with [datasets/preprocess.py](./datasets/preprocess.py)
 - or update evaluation/inference prompt parsing consistently across the repo
 
 ### Out-of-memory during inference

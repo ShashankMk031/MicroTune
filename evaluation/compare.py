@@ -126,7 +126,8 @@ def extract_final_answer(text: str) -> str:
         non_empty_lines = [line.strip() for line in text.splitlines() if line.strip()]
         final_segment = non_empty_lines[-1] if non_empty_lines else text
 
-    return final_segment.strip().splitlines()[0].strip()
+    lines = final_segment.strip().splitlines()
+    return lines[0].strip() if lines else ""
 
 
 def normalize_answer(text: str) -> str:
@@ -323,8 +324,16 @@ def run_model(
     return outputs
 
 
+def _relative_or_absolute(path: str) -> str:
+    """Return relative path if possible, otherwise absolute path."""
+    try:
+        return str(Path(path).relative_to(REPO_ROOT))
+    except ValueError:
+        return str(Path(path).resolve())
+
+
 def save_report(report_path: str, plot_path: str, report: dict) -> None:
-    report["plot_path"] = str(Path(plot_path).resolve())
+    report["plot_path"] = _relative_or_absolute(plot_path)
     report_file = Path(report_path)
     report_file.parent.mkdir(parents=True, exist_ok=True)
     report_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -384,10 +393,16 @@ def main() -> None:
 
     runtime_device = get_runtime_device(args.device)
     resolved_base_model = resolve_base_model_name(args.base_model, args.adapter_path)
+    
+    # Clamp samples to reasonable range with warning
+    sample_count = max(1, min(args.samples, 20))
+    if args.samples != sample_count:
+        print(f"Warning: Requested {args.samples} samples, clamping to {sample_count} (max allowed)")
+    
     samples = load_questions(
         dataset_path=args.dataset_path,
         split=args.split,
-        sample_count=max(1, min(args.samples, 20)),
+        sample_count=sample_count,
         seed=args.seed,
     )
 
@@ -458,7 +473,7 @@ def main() -> None:
         report={
             "runtime_device": runtime_device.type,
             "base_model": resolved_base_model,
-            "adapter_path": args.adapter_path,
+            "adapter_path": _relative_or_absolute(args.adapter_path),
             "split": args.split,
             "sample_count": len(comparisons),
             "base_exact_matches": base_matches,

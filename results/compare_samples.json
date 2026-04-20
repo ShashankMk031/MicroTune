@@ -1,7 +1,7 @@
 {
   "runtime_device": "mps",
   "base_model": "google/gemma-2-2b-it",
-  "adapter_path": "/Users/shashankmk/Documents/Projects-Development/MicroTune/microtune_final",
+  "adapter_path": "./microtune_final",
   "split": "test",
   "sample_count": 15,
   "base_exact_matches": 6,
@@ -188,5 +188,5 @@
       "fine_tuned_match": false
     }
   ],
-  "plot_path": "/Users/shashankmk/Documents/Projects-Development/MicroTune/results/sample_match_comparison.png"
+  "plot_path": "./results/sample_match_comparison.png"
 }

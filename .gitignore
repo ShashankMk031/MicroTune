@@ -40,7 +40,6 @@ checkpoint-*/
 *.pth
 *.bin
 *.safetensors  # Large model files
-merged_model/  # Exclude entire merged model directory
 !results/       # Keep evaluation results
 
 # Logs
@@ -52,3 +51,5 @@ logs/
 *.temp
 .cache/
 wandb/
+
+merged_model/ 

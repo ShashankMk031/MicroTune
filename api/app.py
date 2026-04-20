@@ -56,7 +56,8 @@ def extract_final_answer(text: str) -> str:
         non_empty_lines = [line.strip() for line in text.splitlines() if line.strip()]
         final_segment = non_empty_lines[-1] if non_empty_lines else text
 
-    return final_segment.strip().splitlines()[0].strip()
+    lines = final_segment.strip().splitlines()
+    return lines[0].strip() if lines else ""
 
 
 def load_model_bundle(base_model_name: str, adapter_path: str) -> dict:
@@ -103,9 +104,8 @@ def load_model_bundle(base_model_name: str, adapter_path: str) -> dict:
         if attn_implementation:
             model_kwargs["attn_implementation"] = attn_implementation
     else:
-        # For CPU, use 4-bit quantization
-        model_kwargs["load_in_4bit"] = True
-        model_kwargs["device"] = device
+        # For CPU, load normally without 4-bit quantization
+        pass
 
     tokenizer_source = adapter_path if Path(adapter_path).exists() else base_model_name
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_source)
@@ -114,6 +114,9 @@ def load_model_bundle(base_model_name: str, adapter_path: str) -> dict:
     tokenizer.padding_side = "left"
 
     model = AutoModelForCausalLM.from_pretrained(base_model_name, **model_kwargs)
+    # Move model to device if CPU
+    if device == "cpu":
+        model = model.to(device)
     # For CPU and MPS, disable device mapping in PEFT to avoid accelerate issues
     if device in ["cpu", "mps"]:
         # Load PEFT config and create PeftModel first

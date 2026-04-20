@@ -128,7 +128,8 @@ def extract_final_answer(text: str) -> str:
         non_empty_lines = [line.strip() for line in text.splitlines() if line.strip()]
         final_segment = non_empty_lines[-1] if non_empty_lines else text
 
-    return final_segment.strip().splitlines()[0].strip()
+    lines = final_segment.strip().splitlines()
+    return lines[0].strip() if lines else ""
 
 
 def normalize_answer(text: str) -> str:
@@ -336,6 +337,14 @@ def evaluate_model(
     }
 
 
+def _relative_or_absolute(path: str) -> str:
+    """Return relative path if possible, otherwise absolute path."""
+    try:
+        return str(Path(path).relative_to(REPO_ROOT))
+    except ValueError:
+        return str(Path(path).resolve())
+
+
 def save_report(
     report_path: str,
     plot_path: str,
@@ -350,11 +359,11 @@ def save_report(
         "runtime_device": runtime_device.type,
         "split": split,
         "base_model": base_model_name,
-        "adapter_path": adapter_path,
+        "adapter_path": _relative_or_absolute(adapter_path),
         "base_model_metrics": base_metrics,
         "fine_tuned_model_metrics": fine_tuned_metrics,
         "improvement_percent": (fine_tuned_metrics["accuracy"] - base_metrics["accuracy"]) * 100,
-        "plot_path": str(Path(plot_path).resolve()),
+        "plot_path": _relative_or_absolute(plot_path),
     }
 
     report_file = Path(report_path)
